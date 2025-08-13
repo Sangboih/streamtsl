@@ -1,0 +1,25 @@
+# Dependencies
+node_modules/
+
+# Runtime uploads and generated files
+uploads/
+movies.json
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Env
+.env
+
+# OS/Editor junk
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
+.vscode/
+
+# Build output (if added later)
+dist/
+build/

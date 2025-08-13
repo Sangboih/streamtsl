@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CineFree - Free Movie Streaming</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="logo">CineFree</div>
+        <div class="nav-buttons">
+            <button class="btn btn-secondary" onclick="showSection('home')">Home</button>
+            <button class="btn btn-secondary" onclick="showSection('login')">Admin Login</button>
+            <button class="btn btn-primary" onclick="showSection('admin')" id="adminBtn" style="display: none;">Admin Panel</button>
+        </div>
+    </nav>
+
+    <div class="container">
+        <!-- Home Section -->
+        <div id="home" class="section active">
+            <div class="hero">
+                <h1>Welcome to CineTSL</h1>
+                <p>Discover and watch your favorite movies for free</p>
+                <button class="btn btn-primary" style="font-size: 1.1rem; padding: 1rem 2rem;" onclick="startWatching()">Start Watching</button>
+            </div>
+
+            <div class="movies-section">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+                    <h2>Featured Movies</h2>
+                    <div class="genre-filters">
+                        <button class="btn btn-secondary genre-btn active" data-genre="all" onclick="filterMovies('all')">All</button>
+                        <button class="btn btn-secondary genre-btn" data-genre="Action" onclick="filterMovies('Action')">Action</button>
+                        <button class="btn btn-secondary genre-btn" data-genre="Comedy" onclick="filterMovies('Comedy')">Comedy</button>
+                        <button class="btn btn-secondary genre-btn" data-genre="Drama" onclick="filterMovies('Drama')">Drama</button>
+                        <button class="btn btn-secondary genre-btn" data-genre="Horror" onclick="filterMovies('Horror')">Horror</button>
+                    </div>
+                </div>
+                <div class="movies-grid" id="moviesGrid">
+                    <!-- Movies will be dynamically added here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Login Section -->
+        <div id="login" class="section">
+            <div class="login-form">
+                <h2 style="text-align: center; margin-bottom: 2rem;">Admin Login</h2>
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input type="text" class="form-control" id="username" placeholder="Enter admin username">
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" class="form-control" id="password" placeholder="Enter admin password">
+                </div>
+                <button class="btn btn-primary" style="width: 100%;" onclick="login()">Login</button>
+            </div>
+        </div>
+
+        <!-- Admin Panel -->
+        <div id="admin" class="section">
+            <div class="admin-panel">
+                <h2 style="text-align: center; margin-bottom: 2rem;">Admin Panel - Upload Movie</h2>
+                
+                <div class="form-group">
+                    <label for="movieTitle">Movie Title</label>
+                    <input type="text" class="form-control" id="movieTitle" placeholder="Enter movie title">
+                </div>
+
+                <div class="form-group">
+                    <label for="movieGenre">Genre</label>
+                    <select class="form-control" id="movieGenre">
+                        <option value="">Select a genre...</option>
+                        <option value="Action">Action</option>
+                        <option value="Comedy">Comedy</option>
+                        <option value="Drama">Drama</option>
+                        <option value="Horror">Horror</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="movieDescription">Description</label>
+                    <textarea class="form-control" id="movieDescription" placeholder="Enter movie description"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="movieFile">Movie File</label>
+                    <div class="file-upload" onclick="document.getElementById('movieFile').click()">
+                        <div style="font-size: 3rem; margin-bottom: 1rem;">🎬</div>
+                        <div>Click to upload movie file</div>
+                        <input type="file" id="movieFile" accept="video/*" onchange="handleFileSelect(this)">
+                        <div id="fileInfo" style="margin-top: 1rem; color: #4ecdc4;"></div>
+                    </div>
+                </div>
+
+                <button class="btn btn-primary" style="width: 100%; font-size: 1.1rem;" onclick="uploadMovie()">Upload Movie</button>
+                
+                <div style="margin-top: 2rem;">
+                    <button class="btn btn-secondary" onclick="logout()">Logout</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Video Player -->
+        <div id="player" class="section">
+            <div class="video-player">
+                <div class="video-container" id="videoContainer">
+                    Video player will appear here
+                </div>
+                <div class="video-info">
+                    <h2 id="currentMovieTitle">Movie Title</h2>
+                    <p id="currentMovieGenre">Genre</p>
+                    <p id="currentMovieDescription">Movie description...</p>
+                </div>
+            </div>
+            <button class="btn btn-secondary" onclick="showSection('home')" style="margin-top: 2rem;">← Back to Home</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

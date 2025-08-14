@@ -1,19 +1,11 @@
 'use strict';
 
 // ======= Configuration =======
-const API_BASE = 'http://localhost:3000/api';
-let backendAvailable = false;
+const API_BASE = 'http://localhost:3001/api';
+
 let authToken = null;
 
-// ======= Seed Movies =======
-const seedMovies = [
-  { id: 1, title: 'Fast & Furious', genre: 'Action', description: 'High-octane action with cars and adrenaline.', videoUrl: null },
-  { id: 2, title: 'The Hangover', genre: 'Comedy', description: 'A hilarious comedy about a wild night in Vegas.', videoUrl: null },
-  { id: 3, title: 'The Godfather', genre: 'Drama', description: 'A classic drama about family and power.', videoUrl: null },
-  { id: 4, title: 'Halloween', genre: 'Horror', description: 'A terrifying horror movie that will keep you on edge.', videoUrl: null },
-  { id: 5, title: 'Die Hard', genre: 'Action', description: 'An explosive action thriller in a skyscraper.', videoUrl: null },
-  { id: 6, title: 'Superbad', genre: 'Comedy', description: 'A coming-of-age comedy about friendship.', videoUrl: null },
-];
+
 
 // ======= State =======
 let movies = [];
@@ -22,25 +14,16 @@ let currentSection = 'home';
 let currentGenreFilter = 'all';
 
 // ======= Utilities =======
-function saveMoviesToLocal() {
-  try { localStorage.setItem('cinefree_movies', JSON.stringify(movies)); } catch {}
-}
 
-function loadMoviesFromLocal() {
-  try {
-    const raw = localStorage.getItem('cinefree_movies');
-    if (raw) return JSON.parse(raw);
-  } catch {}
-  return null;
-}
+function showNotification(message, isError = false) {
+  const notification = document.getElementById('notification');
+  notification.textContent = message;
+  notification.className = 'notification show';
+  if (isError) notification.classList.add('error');
 
-async function checkBackend() {
-  try {
-    const res = await fetch(`${API_BASE}/health`, { cache: 'no-store' });
-    backendAvailable = res.ok;
-  } catch {
-    backendAvailable = false;
-  }
+  setTimeout(() => {
+    notification.classList.remove('show');
+  }, 3000);
 }
 
 function setSectionActive(sectionName) {
@@ -48,44 +31,30 @@ function setSectionActive(sectionName) {
   document.getElementById(sectionName).classList.add('active');
   currentSection = sectionName;
   if (sectionName === 'home') displayMovies();
+  if (sectionName === 'admin') renderAdminMoviesList();
 }
 
 // ======= Auth =======
-const fallbackAdmin = { username: 'admin', password: 'msbmsb325TSL' };
 
 async function login() {
   const username = document.getElementById('username').value;
   const password = document.getElementById('password').value;
 
-  if (backendAvailable) {
-    try {
-      const res = await fetch(`${API_BASE}/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password })
-      });
-      if (!res.ok) throw new Error('Invalid credentials');
-      const data = await res.json();
-      authToken = data.token;
-      isLoggedIn = true;
-      document.getElementById('adminBtn').style.display = 'inline-block';
-      setSectionActive('admin');
-      alert('Login successful!');
-      return;
-    } catch (e) {
-      alert('Login failed: ' + (e.message || 'Unknown error'));
-      return;
-    }
-  }
-
-  // Fallback client-side auth
-  if (username === fallbackAdmin.username && password === fallbackAdmin.password) {
+  try {
+    const res = await fetch(`${API_BASE}/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password })
+    });
+    if (!res.ok) throw new Error('Invalid credentials');
+    const data = await res.json();
+    authToken = data.token;
     isLoggedIn = true;
     document.getElementById('adminBtn').style.display = 'inline-block';
     setSectionActive('admin');
-    alert('Login successful!');
-  } else {
-    alert('Invalid credentials! Try: admin / msbmsb325TSL');
+    showNotification('Login successful!');
+  } catch (e) {
+    showNotification('Login failed: ' + (e.message || 'Unknown error'), true);
   }
 }
 
@@ -96,7 +65,7 @@ function logout() {
   document.getElementById('username').value = '';
   document.getElementById('password').value = '';
   setSectionActive('home');
-  alert('Logged out successfully!');
+  showNotification('Logged out successfully!');
 }
 
 // ======= Upload =======
@@ -114,48 +83,37 @@ async function uploadMovie() {
   const fileInput = document.getElementById('movieFile');
 
   if (!title || !genre || !description) {
-    alert('Please fill in all fields!');
+    showNotification('Please fill in all fields!', true);
     return;
   }
 
-  // Try backend first
-  if (backendAvailable && isLoggedIn) {
-    try {
-      const form = new FormData();
-      form.append('title', title);
-      form.append('genre', genre);
-      form.append('description', description);
-      if (fileInput.files[0]) form.append('video', fileInput.files[0]);
-
-      const res = await fetch(`${API_BASE}/movies`, {
-        method: 'POST',
-        headers: authToken ? { Authorization: `Bearer ${authToken}` } : undefined,
-        body: form
-      });
-      if (!res.ok) throw new Error('Upload failed');
-      const created = await res.json();
-      movies.push(created);
-      saveMoviesToLocal();
-      clearAdminForm();
-      alert('Movie uploaded successfully!');
-      displayMovies();
-      return;
-    } catch (e) {
-      console.warn('Backend upload failed, falling back to local:', e);
-    }
+  if (!isLoggedIn) {
+    showNotification('You must be logged in to upload movies.', true);
+    return;
   }
 
-  // Fallback local add
-  const newMovie = {
-    id: movies.length ? Math.max(...movies.map(m => m.id)) + 1 : 1,
-    title, genre, description,
-    videoUrl: fileInput.files[0] ? URL.createObjectURL(fileInput.files[0]) : null,
-  };
-  movies.push(newMovie);
-  saveMoviesToLocal();
-  clearAdminForm();
-  alert('Movie uploaded successfully (local only)!');
-  displayMovies();
+  try {
+    const form = new FormData();
+    form.append('title', title);
+    form.append('genre', genre);
+    form.append('description', description);
+    if (fileInput.files[0]) form.append('video', fileInput.files[0]);
+
+    const res = await fetch(`${API_BASE}/movies`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${authToken}` },
+      body: form
+    });
+    if (!res.ok) throw new Error('Upload failed');
+    const created = await res.json();
+    movies.push(created);
+    clearAdminForm();
+    showNotification('Movie uploaded successfully!');
+    displayMovies();
+    renderAdminMoviesList();
+  } catch (e) {
+    showNotification('Upload failed: ' + (e.message || 'Unknown error'), true);
+  }
 }
 
 function clearAdminForm() {
@@ -164,6 +122,60 @@ function clearAdminForm() {
   document.getElementById('movieDescription').value = '';
   document.getElementById('movieFile').value = '';
   document.getElementById('fileInfo').textContent = '';
+}
+
+// ======= Admin Manage (Delete) =======
+function renderAdminMoviesList() {
+  const container = document.getElementById('adminMoviesList');
+  if (!container) return;
+  if (!isLoggedIn) {
+    container.innerHTML = '<div style="opacity:0.8">Login to manage movies.</div>';
+    return;
+  }
+  if (!movies.length) {
+    container.innerHTML = '<div style="opacity:0.8">No movies yet.</div>';
+    return;
+  }
+  container.innerHTML = movies.map(m => `
+    <div class="admin-movie-item">
+      <div class="meta">
+        <strong>${m.title}</strong> · <span>${m.genre}</span>${m.videoUrl ? ' · <span style="color:#4ecdc4">video</span>' : ''}
+      </div>
+            <button class="btn btn-danger" onclick="deleteMovie('${m.id}')">Delete</button>
+    </div>
+  `).join('');
+}
+
+async function deleteMovie(id) {
+  if (!confirm('Are you sure you want to delete this movie?')) return;
+  const targetId = id;
+  const exists = movies.some(m => m.id === targetId);
+  if (!exists) return;
+
+  if (!isLoggedIn || !authToken) {
+    showNotification('You must be logged in to delete movies.', true);
+    return;
+  }
+
+  try {
+    const res = await fetch(`${API_BASE}/movies/${targetId}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${authToken}` }
+    });
+    if (!res.ok) {
+      const msg = await res.text();
+      throw new Error(msg || 'Delete failed');
+    }
+
+    // On success, update UI
+    movies = movies.filter(m => m.id !== targetId);
+    displayMovies();
+    renderAdminMoviesList();
+    showNotification('Movie deleted.');
+
+  } catch (e) {
+    showNotification('Server delete failed: ' + (e.message || 'Unknown error'), true);
+  }
 }
 
 // ======= Movies List / Filters =======
@@ -247,24 +259,14 @@ function startWatching() {
 
 // ======= Initialization =======
 async function init() {
-  await checkBackend();
-
-  const local = loadMoviesFromLocal();
-  if (backendAvailable) {
-    try {
-      const res = await fetch(`${API_BASE}/movies`);
-      if (res.ok) {
-        movies = await res.json();
-        // If server has no movies and local has some, seed server later (not doing auto-seed here)
-      } else {
-        movies = local || seedMovies.slice();
-      }
-    } catch {
-      movies = local || seedMovies.slice();
-    }
-  } else {
-    // No backend: use local or seed
-    movies = local || seedMovies.slice();
+  try {
+    const res = await fetch(`${API_BASE}/movies`);
+    if (!res.ok) throw new Error('Could not fetch movies');
+    movies = await res.json();
+  } catch (e) {
+    console.error('Initialization failed:', e);
+    movies = []; // Start with empty list on error
+    showNotification('Could not load movies from the server. Please ensure the backend is running.', true);
   }
 
   displayMovies();
@@ -279,6 +281,7 @@ window.uploadMovie = uploadMovie;
 window.filterMovies = filterMovies;
 window.playMovie = playMovie;
 window.startWatching = startWatching;
+window.deleteMovie = deleteMovie;
 
 // Start
 init();

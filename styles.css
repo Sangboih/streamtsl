@@ -1,3 +1,28 @@
+/* Notification */
+.notification {
+  position: fixed;
+  top: 80px; /* Aligned with container margin */
+  right: 20px;
+  padding: 1rem 1.5rem;
+  border-radius: 8px;
+  background-color: #4ecdc4;
+  color: #1a1a1a;
+  font-weight: bold;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+  transform: translateX(120%);
+  transition: transform 0.5s ease-in-out;
+  z-index: 1001;
+}
+
+.notification.show {
+  transform: translateX(0);
+}
+
+.notification.error {
+  background-color: #ff6b6b;
+  color: white;
+}
+
 * {
     margin: 0;
     padding: 0;
@@ -65,6 +90,15 @@ body {
     box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
 }
 
+.btn-danger {
+    background: #e74c3c;
+    color: #fff;
+}
+
+.btn-danger:hover {
+    background: #c0392b;
+}
+
 /* Main Content */
 .container {
     margin-top: 80px;
@@ -81,8 +115,8 @@ body {
 
 /* Hero Section */
 .hero {
+    padding: 5rem 2rem;
     text-align: center;
-    padding: 4rem 0;
     background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 600"><rect fill="%23222" width="1000" height="600"/><circle fill="%23333" cx="200" cy="150" r="50"/><circle fill="%23333" cx="800" cy="300" r="80"/><circle fill="%23333" cx="500" cy="450" r="60"/></svg>');
     background-size: cover;
     border-radius: 20px;
@@ -134,6 +168,10 @@ body {
     0% { box-shadow: 0 0 0 0 rgba(78, 205, 196, 0.4); }
     50% { box-shadow: 0 0 0 8px rgba(78, 205, 196, 0.15); }
     100% { box-shadow: 0 0 0 0 rgba(78, 205, 196, 0.0); }
+}
+
+.movies-section {
+    padding-top: 3rem;
 }
 
 .movies-section h2 {
@@ -191,7 +229,7 @@ body {
 
 /* Admin Panel */
 .admin-panel {
-    max-width: 800px;
+    max-width: 500px;
     margin: 0 auto;
     background: rgba(255, 255, 255, 0.1);
     border-radius: 20px;
@@ -267,7 +305,7 @@ textarea.form-control {
 
 /* Login Form */
 .login-form {
-    max-width: 400px;
+    max-width: 500px;
     margin: 0 auto;
     background: rgba(255, 255, 255, 0.1);
     border-radius: 20px;
@@ -275,6 +313,28 @@ textarea.form-control {
     -webkit-backdrop-filter: blur(10px);
     backdrop-filter: blur(10px);
     border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Admin Manage List */
+.admin-movies-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    padding-bottom: 2rem;
+}
+
+.admin-movie-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 10px;
+}
+
+.admin-movie-item .meta {
+    opacity: 0.9;
 }
 
 /* Video Player */

@@ -1,8 +1,7 @@
 'use strict';
 
 // ======= Configuration =======
-// Backend API is not available on static hosting, so we disable it.
-// const API_BASE = 'http://localhost:3002/api';
+const API_BASE = 'http://localhost:3002/api';
 
 let authToken = null;
 
@@ -41,20 +40,30 @@ async function login() {
   const username = document.getElementById('username').value;
   const password = document.getElementById('password').value;
 
-  if (username === 'admin' && password === 'msbmsb325') {
+  try {
+    const res = await fetch(`${API_BASE}/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password })
+    });
+    if (!res.ok) throw new Error('Invalid credentials');
+    const data = await res.json();
+    authToken = data.token;
+    localStorage.setItem('authToken', authToken);
     isLoggedIn = true;
-    document.getElementById('adminBtn').style.display = 'inline-block';
+    document.getElementById('adminBtn').classList.remove('hidden');
     setSectionActive('admin');
     showNotification('Login successful!');
-  } else {
-    showNotification('Invalid credentials', true);
+  } catch (e) {
+    showNotification('Login failed: ' + (e.message || 'Unknown error'), true);
   }
 }
 
 function logout() {
   isLoggedIn = false;
   authToken = null;
-  document.getElementById('adminBtn').style.display = 'none';
+  localStorage.removeItem('authToken');
+  document.getElementById('adminBtn').classList.add('hidden');
   document.getElementById('username').value = '';
   document.getElementById('password').value = '';
   setSectionActive('home');
@@ -70,7 +79,43 @@ function handleFileSelect(input) {
 }
 
 async function uploadMovie() {
-  showNotification('Admin functionality is disabled on this version.', true);
+  const title = document.getElementById('movieTitle').value.trim();
+  const genre = document.getElementById('movieGenre').value;
+  const description = document.getElementById('movieDescription').value.trim();
+  const fileInput = document.getElementById('movieFile');
+
+  if (!title || !genre || !description) {
+    showNotification('Please fill in all fields!', true);
+    return;
+  }
+
+  if (!isLoggedIn) {
+    showNotification('You must be logged in to upload movies.', true);
+    return;
+  }
+
+  try {
+    const form = new FormData();
+    form.append('title', title);
+    form.append('genre', genre);
+    form.append('description', description);
+    if (fileInput.files[0]) form.append('video', fileInput.files[0]);
+
+    const res = await fetch(`${API_BASE}/movies`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${authToken}` },
+      body: form
+    });
+    if (!res.ok) throw new Error('Upload failed');
+    const created = await res.json();
+    movies.push(created);
+    clearAdminForm();
+    showNotification('Movie uploaded successfully!');
+    displayMovies();
+    renderAdminMoviesList();
+  } catch (e) {
+    showNotification('Upload failed: ' + (e.message || 'Unknown error'), true);
+  }
 }
 
 function clearAdminForm() {
@@ -104,7 +149,35 @@ function renderAdminMoviesList() {
 }
 
 async function deleteMovie(id) {
-  showNotification('Admin functionality is disabled on this version.', true);
+  if (!confirm('Are you sure you want to delete this movie?')) return;
+  const targetId = id;
+  const exists = movies.some(m => m.id === targetId);
+  if (!exists) return;
+
+  if (!isLoggedIn || !authToken) {
+    showNotification('You must be logged in to delete movies.', true);
+    return;
+  }
+
+  try {
+    const res = await fetch(`${API_BASE}/movies/${targetId}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${authToken}` }
+    });
+    if (!res.ok) {
+      const msg = await res.text();
+      throw new Error(msg || 'Delete failed');
+    }
+
+    // On success, update UI
+    movies = movies.filter(m => m.id !== targetId);
+    displayMovies();
+    renderAdminMoviesList();
+    showNotification('Movie deleted.');
+
+  } catch (e) {
+    showNotification('Server delete failed: ' + (e.message || 'Unknown error'), true);
+  }
 }
 
 // ======= Movies List / Filters =======
@@ -155,7 +228,7 @@ function playMovie(movie) {
   if (movie.videoUrl) {
     videoContainer.innerHTML = `
       <video controls style="width: 100%; height: 100%;">
-        <source src="${movie.videoUrl}" type="video/mp4">
+        <source src="${API_BASE.replace('/api', '')}${movie.videoUrl}" type="video/mp4">
         Your browser does not support the video tag.
       </video>
     `;
@@ -188,8 +261,15 @@ function startWatching() {
 
 // ======= Initialization =======
 async function init() {
+  // Check for a stored token
+  const storedToken = localStorage.getItem('authToken');
+  if (storedToken) {
+    authToken = storedToken;
+    isLoggedIn = true;
+    document.getElementById('adminBtn').classList.remove('hidden');
+  }
   try {
-    const res = await fetch('movies.json');
+    const res = await fetch(`${API_BASE}/movies`);
     if (!res.ok) throw new Error('Could not fetch movies');
     movies = await res.json();
   } catch (e) {

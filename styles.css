@@ -337,27 +337,6 @@ textarea.form-control {
     opacity: 0.9;
 }
 
-#adminBtn {
-    display: none;
-}
-
-.hero-btn {
-    font-size: 1.1rem;
-    padding: 1rem 2rem;
-}
-
-.input-label {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    padding: 0;
-    margin: -1px;
-    overflow: hidden;
-    clip: rect(0, 0, 0, 0);
-    white-space: nowrap;
-    border-width: 0;
-}
-
 /* Video Player */
 .video-player {
     max-width: 900px;
@@ -400,6 +379,42 @@ textarea.form-control {
         gap: 1rem;
     }
 }
+
+/* Utility Classes */
+.hidden {
+    display: none !important; /* Use important to override inline style if needed */
+}
+
+.text-center {
+    text-align: center;
+}
+
+.mb-2 {
+    margin-bottom: 2rem;
+}
+
+.mt-2 {
+    margin-top: 2rem;
+}
+
+.w-100 {
+    width: 100%;
+}
+
+.btn-hero {
+    font-size: 1.1rem;
+    padding: 1rem 2rem;
+}
+
+.movies-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
 
 /* Animations */
 @keyframes fadeIn {

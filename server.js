@@ -6,9 +6,12 @@ const express = require('express');
 const cors = require('cors');
 const multer = require('multer');
 const config = require('./config');
+const low = require('lowdb');
+const FileSync = require('lowdb/adapters/FileSync');
+const { body, validationResult } = require('express-validator');
 
 const app = express();
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 3002;
 
 // Storage for uploads
 const uploadsDir = path.join(__dirname, 'uploads');
@@ -26,32 +29,12 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage });
 
-// Movies persistence (very simple JSON file)
-const dataFile = path.join(__dirname, 'movies.json');
-let movies = [];
+// Database setup (lowdb)
+const adapter = new FileSync('movies.json');
+const db = low(adapter);
 
-function loadMovies() {
-  try {
-    if (fs.existsSync(dataFile)) {
-      const data = fs.readFileSync(dataFile, 'utf-8');
-      movies = JSON.parse(data);
-    } else {
-      fs.writeFileSync(dataFile, JSON.stringify([]));
-      movies = [];
-    }
-  } catch (e) {
-    console.error('Could not load or create movies.json, starting with empty list.');
-    movies = [];
-  }
-}
-
-function saveMovies() {
-  try {
-    fs.writeFileSync(dataFile, JSON.stringify(movies, null, 2));
-  } catch (e) {
-    console.error('Could not save movies.json:', e);
-  }
-}
+// Set some defaults if the file is empty
+db.defaults({ movies: [] }).write();
 
 // CORS: allow requests from any origin (including file:// which appears as null)
 app.use(cors());
@@ -79,34 +62,43 @@ app.post('/api/login', (req, res) => {
 
 // Get movies
 app.get('/api/movies', (req, res) => {
+  const movies = db.get('movies').value();
   res.json(movies);
 });
 
 // Create movie (with optional video upload)
-app.post('/api/movies', upload.single('video'), (req, res) => {
-  // Very naive Authorization check
-  const auth = req.headers.authorization || '';
-  if (auth !== 'Bearer dev-token') {
-    return res.status(401).json({ error: 'Unauthorized' });
-  }
+app.post('/api/movies', 
+  upload.single('video'),
+  [
+    body('title').not().isEmpty().trim().escape().withMessage('Title is required'),
+    body('genre').not().isEmpty().trim().escape().withMessage('Genre is required'),
+    body('description').not().isEmpty().trim().escape().withMessage('Description is required'),
+  ],
+  (req, res) => {
+    // Very naive Authorization check
+    const auth = req.headers.authorization || '';
+    if (auth !== 'Bearer dev-token') {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
 
-  const { title, genre, description } = req.body;
-  if (!title || !genre || !description) {
-    return res.status(400).json({ error: 'Missing fields' });
-  }
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
 
-  const id = crypto.randomUUID();
-  const movie = {
-    id,
-    title,
-    genre,
-    description,
-    videoUrl: req.file ? `/uploads/${req.file.filename}` : null
-  };
-  movies.push(movie);
-  saveMovies();
-  res.status(201).json(movie);
-});
+    const { title, genre, description } = req.body;
+    const id = crypto.randomUUID();
+    const movie = {
+      id,
+      title,
+      genre,
+      description,
+      videoUrl: req.file ? `/uploads/${req.file.filename}` : null
+    };
+    db.get('movies').push(movie).write();
+    res.status(201).json(movie);
+  }
+);
 
 // Delete movie
 app.delete('/api/movies/:id', (req, res) => {
@@ -117,13 +109,11 @@ app.delete('/api/movies/:id', (req, res) => {
   }
 
   const id = req.params.id;
-  const idx = movies.findIndex(m => m.id === id);
-  if (idx === -1) {
+  const [removed] = db.get('movies').remove({ id }).write();
+
+  if (!removed) {
     return res.status(404).json({ error: 'Not found' });
   }
-
-  const [removed] = movies.splice(idx, 1);
-  saveMovies();
 
   // Attempt to delete associated uploaded file if it exists
   try {
@@ -140,8 +130,6 @@ app.delete('/api/movies/:id', (req, res) => {
 
   res.status(204).send();
 });
-
-loadMovies();
 
 app.listen(PORT, () => {
   console.log(`CineFree backend running on http://localhost:${PORT}`);

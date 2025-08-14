@@ -1,0 +1,21 @@
+{
+  "name": "CineFree",
+  "short_name": "CineFree",
+  "start_url": "/index.html",
+  "display": "standalone",
+  "background_color": "#1a1a1a",
+  "theme_color": "#4ecdc4",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icons/icon-192x192.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "/icons/icon-512x512.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ]
+}

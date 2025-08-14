@@ -38,7 +38,17 @@ function setSectionActive(sectionName) {
 // ======= Auth =======
 
 async function login() {
-  showNotification('Admin functionality is disabled on this version.', true);
+  const username = document.getElementById('username').value;
+  const password = document.getElementById('password').value;
+
+  if (username === 'admin' && password === 'msbmsb325') {
+    isLoggedIn = true;
+    document.getElementById('adminBtn').style.display = 'inline-block';
+    setSectionActive('admin');
+    showNotification('Login successful!');
+  } else {
+    showNotification('Invalid credentials', true);
+  }
 }
 
 function logout() {

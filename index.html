@@ -14,8 +14,7 @@
         <div class="logo">CineFree</div>
         <div class="nav-buttons">
             <button class="btn btn-secondary" onclick="showSection('home')">Home</button>
-            <button class="btn btn-secondary" onclick="showSection('login')">Admin Login</button>
-            <button class="btn btn-primary" onclick="showSection('admin')" id="adminBtn" style="display: none;">Admin Panel</button>
+
         </div>
     </nav>
 
@@ -46,57 +45,6 @@
             </div>
         </div>
 
-        <!-- Login Section -->
-        <div id="login" class="section">
-            <div class="login-form">
-                <h2 style="text-align: center; margin-bottom: 2rem;">Admin Login</h2>
-                <div class="form-group">
-                    <label for="username">Username</label>
-                    <input type="text" class="form-control" id="username" placeholder="Enter admin username">
-                </div>
-                <div class="form-group">
-                    <label for="password">Password</label>
-                    <input type="password" class="form-control" id="password" placeholder="Enter admin password">
-                </div>
-                <button class="btn btn-primary" style="width: 100%;" onclick="login()">Login</button>
-            </div>
-        </div>
-
-        <!-- Admin Panel -->
-        <div id="admin" class="section">
-            <div class="admin-panel">
-                <h2 style="text-align: center; margin-bottom: 2rem;">Admin Panel - Upload Movie</h2>
-                
-                <div class="form-group">
-                    <label for="movieTitle">Movie Title</label>
-                    <input type="text" class="form-control" id="movieTitle" placeholder="Enter movie title">
-                </div>
-
-                <div class="form-group">
-                    <label for="movieGenre">Genre</label>
-                    <select class="form-control" id="movieGenre">
-                        <option value="">Select a genre...</option>
-                        <option value="Action">Action</option>
-                        <option value="Comedy">Comedy</option>
-                        <option value="Drama">Drama</option>
-                        <option value="Horror">Horror</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label for="movieDescription">Description</label>
-                    <textarea class="form-control" id="movieDescription" placeholder="Enter movie description"></textarea>
-                </div>
-
-                <div class="form-group">
-                    <label for="movieFile">Movie File</label>
-                    <div class="file-upload" onclick="document.getElementById('movieFile').click()">
-                        <div style="font-size: 3rem; margin-bottom: 1rem;">🎬</div>
-                        <div>Click to upload movie file</div>
-                        <input type="file" id="movieFile" accept="video/*" onchange="handleFileSelect(this)">
-                        <div id="fileInfo" style="margin-top: 1rem; color: #4ecdc4;"></div>
-                    </div>
-                </div>
 
                 <button class="btn btn-primary" style="width: 100%; font-size: 1.1rem;" onclick="uploadMovie()">Upload Movie</button>
                 

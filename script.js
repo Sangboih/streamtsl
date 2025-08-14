@@ -1,7 +1,8 @@
 'use strict';
 
 // ======= Configuration =======
-const API_BASE = 'http://localhost:3002/api';
+// Backend API is not available on static hosting, so we disable it.
+// const API_BASE = 'http://localhost:3002/api';
 
 let authToken = null;
 
@@ -37,25 +38,7 @@ function setSectionActive(sectionName) {
 // ======= Auth =======
 
 async function login() {
-  const username = document.getElementById('username').value;
-  const password = document.getElementById('password').value;
-
-  try {
-    const res = await fetch(`${API_BASE}/login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, password })
-    });
-    if (!res.ok) throw new Error('Invalid credentials');
-    const data = await res.json();
-    authToken = data.token;
-    isLoggedIn = true;
-    document.getElementById('adminBtn').style.display = 'inline-block';
-    setSectionActive('admin');
-    showNotification('Login successful!');
-  } catch (e) {
-    showNotification('Login failed: ' + (e.message || 'Unknown error'), true);
-  }
+  showNotification('Admin functionality is disabled on this version.', true);
 }
 
 function logout() {
@@ -77,43 +60,7 @@ function handleFileSelect(input) {
 }
 
 async function uploadMovie() {
-  const title = document.getElementById('movieTitle').value.trim();
-  const genre = document.getElementById('movieGenre').value;
-  const description = document.getElementById('movieDescription').value.trim();
-  const fileInput = document.getElementById('movieFile');
-
-  if (!title || !genre || !description) {
-    showNotification('Please fill in all fields!', true);
-    return;
-  }
-
-  if (!isLoggedIn) {
-    showNotification('You must be logged in to upload movies.', true);
-    return;
-  }
-
-  try {
-    const form = new FormData();
-    form.append('title', title);
-    form.append('genre', genre);
-    form.append('description', description);
-    if (fileInput.files[0]) form.append('video', fileInput.files[0]);
-
-    const res = await fetch(`${API_BASE}/movies`, {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${authToken}` },
-      body: form
-    });
-    if (!res.ok) throw new Error('Upload failed');
-    const created = await res.json();
-    movies.push(created);
-    clearAdminForm();
-    showNotification('Movie uploaded successfully!');
-    displayMovies();
-    renderAdminMoviesList();
-  } catch (e) {
-    showNotification('Upload failed: ' + (e.message || 'Unknown error'), true);
-  }
+  showNotification('Admin functionality is disabled on this version.', true);
 }
 
 function clearAdminForm() {
@@ -147,35 +94,7 @@ function renderAdminMoviesList() {
 }
 
 async function deleteMovie(id) {
-  if (!confirm('Are you sure you want to delete this movie?')) return;
-  const targetId = id;
-  const exists = movies.some(m => m.id === targetId);
-  if (!exists) return;
-
-  if (!isLoggedIn || !authToken) {
-    showNotification('You must be logged in to delete movies.', true);
-    return;
-  }
-
-  try {
-    const res = await fetch(`${API_BASE}/movies/${targetId}`, {
-      method: 'DELETE',
-      headers: { Authorization: `Bearer ${authToken}` }
-    });
-    if (!res.ok) {
-      const msg = await res.text();
-      throw new Error(msg || 'Delete failed');
-    }
-
-    // On success, update UI
-    movies = movies.filter(m => m.id !== targetId);
-    displayMovies();
-    renderAdminMoviesList();
-    showNotification('Movie deleted.');
-
-  } catch (e) {
-    showNotification('Server delete failed: ' + (e.message || 'Unknown error'), true);
-  }
+  showNotification('Admin functionality is disabled on this version.', true);
 }
 
 // ======= Movies List / Filters =======
@@ -260,7 +179,7 @@ function startWatching() {
 // ======= Initialization =======
 async function init() {
   try {
-    const res = await fetch(`${API_BASE}/movies`);
+    const res = await fetch('movies.json');
     if (!res.ok) throw new Error('Could not fetch movies');
     movies = await res.json();
   } catch (e) {
